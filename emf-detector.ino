@@ -7,25 +7,28 @@ int dirty[10];
 byte index = 0;
 int maxVal = 0;
 
-//byte pin = 9;
-
-volatile boolean state = false;
+byte s01 = 2;
+byte s02 = 3;
+byte pin = 9;
 
 void setup() {
   Serial.begin(9600);
 
-  pinMode(2, INPUT);  //To Switch
-  pinMode(3, INPUT_PULLUP); //To Button
+  pinMode(s01, INPUT);  //To Switch
+  pinMode(s02, INPUT_PULLUP); //To Button
+  pinMode(pin, OUTPUT); //To LED
 }
 
 void loop() {
   valH = average(inPinH, sample);
 
-  //valH = constrain(valH, 0, 100);
-  //valH = map(valH, 0, 100, 0, 255);
-  //analogWrite(pin, valH);
+  if (digitalRead(s01) == 1) {
+    analogWrite(pin, map(constrain(jail(valH, maxVal), 0, 100), 0, 100, 0, 255));
+  } else {
+    analogWrite(pin, map(constrain(valH, 0, 500), 0, 500, 0, 255));
+  }
 
-  if (digitalRead(2) == 1) {  //Default Calibration
+  if (digitalRead(s01) == 1) {  //Default Calibration
     if (millis() > 2000) {
       if (index < 10) {
         dirty[index] = valH;
@@ -40,8 +43,8 @@ void loop() {
 
   delay(1);
 
-  if (digitalRead(2) == 1) {
-    attachInterrupt(digitalPinToInterrupt(3), interrupt, FALLING);
+  if (digitalRead(s01) == 1) {
+    attachInterrupt(digitalPinToInterrupt(s02), interrupt, FALLING);
     Serial.println(jail(valH, maxVal)); //Clear signal
   } else {
     Serial.println(valH); //Dirty signal
